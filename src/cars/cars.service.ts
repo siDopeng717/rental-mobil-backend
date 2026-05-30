@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 
@@ -12,11 +18,19 @@ export class CarsService {
   }
 
   async findOne(id: number) {
-    return this.prisma.car.findUnique({
+    const car = await this.prisma.car.findUnique({
       where: {
         id,
       },
     });
+
+    if (!car) {
+      throw new NotFoundException(
+        'Car not found',
+      );
+    }
+
+    return car;
   }
 
   async create(data: CreateCarDto) {
@@ -25,7 +39,12 @@ export class CarsService {
     });
   }
 
-  async update(id: number, data: UpdateCarDto) {
+  async update(
+    id: number,
+    data: UpdateCarDto,
+  ) {
+    await this.findOne(id);
+
     return this.prisma.car.update({
       where: {
         id,
@@ -35,6 +54,27 @@ export class CarsService {
   }
 
   async remove(id: number) {
+    const car = await this.findOne(id);
+
+    const rental =
+      await this.prisma.rental.findFirst({
+        where: {
+          carId: car.id,
+          status: {
+            in: [
+              'PENDING',
+              'ACTIVE',
+            ],
+          },
+        },
+      });
+
+    if (rental) {
+      throw new BadRequestException(
+        'Car still has active rental',
+      );
+    }
+
     return this.prisma.car.delete({
       where: {
         id,
