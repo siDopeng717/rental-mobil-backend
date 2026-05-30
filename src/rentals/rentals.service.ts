@@ -1,4 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRentalDto } from './dto/create-rental.dto';
@@ -7,7 +10,10 @@ import { CreateRentalDto } from './dto/create-rental.dto';
 export class RentalsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: number, data: CreateRentalDto) {
+  async create(
+    userId: number,
+    data: CreateRentalDto,
+  ) {
     const car = await this.prisma.car.findUnique({
       where: {
         id: data.carId,
@@ -15,45 +21,63 @@ export class RentalsService {
     });
 
     if (!car) {
-      throw new BadRequestException('Car not found');
+      throw new BadRequestException(
+        'Car not found',
+      );
     }
 
     if (car.status !== 'AVAILABLE') {
-      throw new BadRequestException('Car is not available');
+      throw new BadRequestException(
+        'Car is not available',
+      );
     }
 
-    const startDate = new Date(data.startDate);
-    const endDate = new Date(data.endDate);
+    const startDate = new Date(
+      data.startDate,
+    );
 
-    const diffTime = endDate.getTime() - startDate.getTime();
+    const endDate = new Date(
+      data.endDate,
+    );
 
-    const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffTime =
+      endDate.getTime() -
+      startDate.getTime();
+
+    const totalDays = Math.ceil(
+      diffTime / (1000 * 60 * 60 * 24),
+    );
 
     if (totalDays <= 0) {
-      throw new BadRequestException('End date must be after start date');
+      throw new BadRequestException(
+        'End date must be after start date',
+      );
     }
 
-    const totalPrice = totalDays * car.pricePerDay;
+    const totalPrice =
+      totalDays * car.pricePerDay;
 
-    const rental = await this.prisma.rental.create({
-      data: {
-        userId,
-        carId: data.carId,
-        startDate,
-        endDate,
-        totalPrice,
+    const rental =
+      await this.prisma.rental.create({
+        data: {
+          userId,
+          carId: data.carId,
+          startDate,
+          endDate,
+          totalPrice,
 
-        payment: {
-          create: {
-            amount: totalPrice,
+          payment: {
+            create: {
+              amount: totalPrice,
+            },
           },
         },
-      },
 
-      include: {
-        payment: true,
-      },
-    });
+        include: {
+          car: true,
+          payment: true,
+        },
+      });
 
     await this.prisma.car.update({
       where: {
@@ -65,5 +89,20 @@ export class RentalsService {
     });
 
     return rental;
+  }
+
+  async findMyRentals(
+    userId: number,
+  ) {
+    return this.prisma.rental.findMany({
+      where: {
+        userId,
+      },
+
+      include: {
+        car: true,
+        payment: true,
+      },
+    });
   }
 }
