@@ -6,14 +6,21 @@ import { PrismaService } from '../prisma/prisma.service';
 export class PaymentsService {
   constructor(private prisma: PrismaService) {}
 
-  async confirmPayment(id: number) {
-    const payment = await this.prisma.payment.update({
+async confirmPayment(id: number) {
+  await this.prisma.payment.update({
+    where: {
+      id,
+    },
+
+    data: {
+      status: 'PAID',
+    },
+  });
+
+  const payment =
+    await this.prisma.payment.findUnique({
       where: {
         id,
-      },
-
-      data: {
-        status: 'PAID',
       },
 
       include: {
@@ -21,18 +28,25 @@ export class PaymentsService {
       },
     });
 
-    await this.prisma.rental.update({
-      where: {
-        id: payment.rentalId,
-      },
+  await this.prisma.rental.update({
+    where: {
+      id: payment?.rentalId,
+    },
 
-      data: {
-        status: 'ACTIVE',
-      },
-    });
+    data: {
+      status: 'ACTIVE',
+    },
+  });
 
-    return payment;
-  }
+  return {
+    message: 'Payment confirmed',
+    paymentId: payment?.id,
+    rentalId: payment?.rentalId,
+    amount: payment?.amount,
+    paymentStatus: 'PAID',
+    rentalStatus: 'ACTIVE',
+  };
+}
 
   async getHistory(userId: number) {
     return this.prisma.payment.findMany({
