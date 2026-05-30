@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,7 +13,13 @@ export class CarsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.car.findMany();
+    return this.prisma.car.findMany({
+      where: {
+        NOT: {
+          status: 'INACTIVE',
+        },
+      },
+    });
   }
 
   async findOne(id: number) {
@@ -49,35 +54,35 @@ export class CarsService {
       where: {
         id,
       },
+
       data,
     });
   }
 
-  async remove(id: number) {
-    const car = await this.findOne(id);
+  async deactivate(id: number) {
+    await this.findOne(id);
 
-    const rental =
-      await this.prisma.rental.findFirst({
-        where: {
-          carId: car.id,
-          status: {
-            in: [
-              'PENDING',
-              'ACTIVE',
-            ],
-          },
-        },
-      });
-
-    if (rental) {
-      throw new BadRequestException(
-        'Car still has active rental',
-      );
-    }
-
-    return this.prisma.car.delete({
+    return this.prisma.car.update({
       where: {
         id,
+      },
+
+      data: {
+        status: 'INACTIVE',
+      },
+    });
+  }
+
+  async activate(id: number) {
+    await this.findOne(id);
+
+    return this.prisma.car.update({
+      where: {
+        id,
+      },
+
+      data: {
+        status: 'AVAILABLE',
       },
     });
   }

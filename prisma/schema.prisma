@@ -78,6 +78,7 @@ enum CarStatus {
   AVAILABLE
   RENTED
   MAINTENANCE
+  INACTIVE
 }
 
 enum RentalStatus {

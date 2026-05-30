@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   Patch,
@@ -59,9 +58,22 @@ export class CarsController {
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.carsService.remove(
+  @Patch(':id/deactivate')
+  deactivate(
+    @Param('id') id: string,
+  ) {
+    return this.carsService.deactivate(
+      Number(id),
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id/activate')
+  activate(
+    @Param('id') id: string,
+  ) {
+    return this.carsService.activate(
       Number(id),
     );
   }
