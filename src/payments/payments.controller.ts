@@ -3,6 +3,8 @@ import {
   Param,
   Patch,
   UseGuards,
+  Get,
+  Request,
 } from '@nestjs/common';
 
 import { AuthGuard } from '@nestjs/passport';
@@ -24,6 +26,14 @@ export class PaymentsController {
   confirm(@Param('id') id: string) {
     return this.paymentsService.confirmPayment(
       Number(id),
+    );
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('history')
+  history(@Request() req: any) {
+    return this.paymentsService.getHistory(
+      req.user.userId,
     );
   }
 }

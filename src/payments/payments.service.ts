@@ -33,4 +33,22 @@ export class PaymentsService {
 
     return payment;
   }
+
+  async getHistory(userId: number) {
+    return this.prisma.payment.findMany({
+      where: {
+        rental: {
+          userId,
+        },
+      },
+
+      include: {
+        rental: {
+          include: {
+            car: true,
+          },
+        },
+      },
+    });
+  }
 }
