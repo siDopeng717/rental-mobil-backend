@@ -21,29 +21,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('payments')
 export class PaymentsController {
-  constructor(
-    private readonly paymentsService: PaymentsService,
-  ) {}
+  constructor(private readonly paymentsService: PaymentsService) {}
 
-  private logger = new Logger(
-    PaymentsController.name,
-  );
-
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('ADMIN')
-  @Patch(':id/confirm')
-  confirm(@Param('id') id: string) {
-    return this.paymentsService.confirmPayment(
-      Number(id),
-    );
-  }
+  private logger = new Logger(PaymentsController.name);
 
   @UseGuards(AuthGuard('jwt'))
   @Get('history')
   history(@Request() req: any) {
-    return this.paymentsService.getHistory(
-      req.user.userId,
-    );
+    return this.paymentsService.getHistory(req.user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -57,13 +42,25 @@ export class PaymentsController {
   )
   uploadProof(
     @Param('id') id: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile()
+    file: Express.Multer.File,
   ) {
     this.logger.log(file);
 
-    return this.paymentsService.uploadProof(
-      Number(id),
-      file,
-    );
+    return this.paymentsService.uploadProof(Number(id), file);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id/confirm')
+  confirm(@Param('id') id: string) {
+    return this.paymentsService.confirmPayment(Number(id));
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id/reject')
+  reject(@Param('id') id: string) {
+    return this.paymentsService.rejectPayment(Number(id));
   }
 }
