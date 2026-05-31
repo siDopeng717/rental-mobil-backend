@@ -148,4 +148,48 @@ export class RentalsService {
       carStatus: 'AVAILABLE',
     };
   }
+
+  async completeRental(rentalId: number) {
+    const rental = await this.prisma.rental.findUnique({
+      where: {
+        id: rentalId,
+      },
+
+      include: {
+        car: true,
+        payment: true,
+      },
+    });
+
+    if (!rental) {
+      throw new BadRequestException('Rental not found');
+    }
+
+    await this.prisma.rental.update({
+      where: {
+        id: rental.id,
+      },
+
+      data: {
+        status: 'COMPLETED',
+      },
+    });
+
+    await this.prisma.car.update({
+      where: {
+        id: rental.carId,
+      },
+
+      data: {
+        status: 'AVAILABLE',
+      },
+    });
+
+    return {
+      message: 'Rental completed',
+      rentalId: rental.id,
+      rentalStatus: 'COMPLETED',
+      carStatus: 'AVAILABLE',
+    };
+  }
 }

@@ -8,12 +8,9 @@ import {
   Patch,
   Param,
 } from '@nestjs/common';
-
 import { AuthGuard } from '@nestjs/passport';
-
 import { RentalsService } from './rentals.service';
 import { CreateRentalDto } from './dto/create-rental.dto';
-
 import { Roles } from '../auth/roles/roles.decorator';
 import { RolesGuard } from '../auth/roles/roles.guard';
 
@@ -37,6 +34,13 @@ export class RentalsController {
   @Patch(':id/cancel')
   cancel(@Param('id') id: string) {
     return this.rentalsService.cancelRental(Number(id));
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id/complete')
+  complete(@Param('id') id: string) {
+    return this.rentalsService.completeRental(Number(id));
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
