@@ -80,6 +80,7 @@ export class PaymentsService {
 
           (error, result) => {
             if (error) {
+              console.log(error);
               reject(error);
             } else {
               resolve(result);
