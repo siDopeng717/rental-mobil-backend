@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import cloudinary from '../cloudinary/cloudinary';
 import type { Multer } from 'multer';
@@ -21,16 +18,15 @@ export class PaymentsService {
       },
     });
 
-    const payment =
-      await this.prisma.payment.findUnique({
-        where: {
-          id,
-        },
+    const payment = await this.prisma.payment.findUnique({
+      where: {
+        id,
+      },
 
-        include: {
-          rental: true,
-        },
-      });
+      include: {
+        rental: true,
+      },
+    });
 
     await this.prisma.rental.update({
       where: {
@@ -70,38 +66,41 @@ export class PaymentsService {
     });
   }
 
-  async uploadProof(
-    id: number,
-    file: Express.Multer.File,
-  ) {
+  async uploadProof(id: number, file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException(
-        'File is required',
-      );
+      throw new BadRequestException('File is required');
     }
 
-    const uploaded =
-      await cloudinary.uploader.upload(
-        file.path,
-        {
-          folder: 'payments',
-        },
-      );
+    const uploaded = await new Promise<any>((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: 'payments',
+          },
 
-    const payment =
-      await this.prisma.payment.update({
-        where: {
-          id,
-        },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          },
+        )
+        .end(file.buffer);
+    });
 
-        data: {
-          proofUrl: uploaded.secure_url,
-        },
-      });
+    const payment = await this.prisma.payment.update({
+      where: {
+        id,
+      },
+
+      data: {
+        proofUrl: uploaded.secure_url,
+      },
+    });
 
     return {
-      message:
-        'Proof uploaded successfully',
+      message: 'Proof uploaded successfully',
 
       paymentId: payment.id,
 
