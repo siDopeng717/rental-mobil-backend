@@ -7,12 +7,16 @@ import {
   Request,
   UploadedFile,
   UseInterceptors,
+  Logger,
 } from '@nestjs/common';
 
 import { AuthGuard } from '@nestjs/passport';
+
 import { PaymentsService } from './payments.service';
+
 import { Roles } from '../auth/roles/roles.decorator';
 import { RolesGuard } from '../auth/roles/roles.guard';
+
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('payments')
@@ -20,6 +24,10 @@ export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
   ) {}
+
+  private logger = new Logger(
+    PaymentsController.name,
+  );
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
@@ -41,12 +49,18 @@ export class PaymentsController {
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id/upload-proof')
   @UseInterceptors(
-    FileInterceptor('file'),
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
   )
   uploadProof(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    this.logger.log(file);
+
     return this.paymentsService.uploadProof(
       Number(id),
       file,
