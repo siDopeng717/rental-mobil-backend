@@ -218,6 +218,10 @@ export class PaymentsService {
       throw new BadRequestException('No proof uploaded');
     }
 
+    if (payment.status === 'PAID') {
+      throw new BadRequestException('Paid payment cannot be rejected');
+    }
+
     await this.prisma.payment.update({
       where: {
         id,
@@ -240,15 +244,20 @@ export class PaymentsService {
       },
     });
 
+    await this.prisma.car.update({
+      where: {
+        id: payment.rental.carId,
+      },
+      data: {
+        status: 'AVAILABLE',
+      },
+    });
+
     return {
       message: 'Payment rejected',
-
       paymentId: payment.id,
-
       rentalId: payment.rentalId,
-
       paymentStatus: 'REJECTED',
-
       rentalStatus: 'PENDING',
     };
   }
