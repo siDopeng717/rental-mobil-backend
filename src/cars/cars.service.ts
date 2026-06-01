@@ -8,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
 
+import cloudinary from '../cloudinary/cloudinary';
+
 @Injectable()
 export class CarsService {
   constructor(private prisma: PrismaService) {}
@@ -38,24 +40,90 @@ export class CarsService {
     return car;
   }
 
-  async create(data: CreateCarDto) {
+  async create(
+    data: CreateCarDto,
+    file: Express.Multer.File,
+  ) {
+    let imageUrl: string | undefined;
+
+    if (file) {
+      const uploaded = await new Promise<any>(
+        (resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                folder: 'cars',
+              },
+
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              },
+            )
+            .end(file.buffer);
+        },
+      );
+
+      imageUrl = uploaded.secure_url;
+    }
+
     return this.prisma.car.create({
-      data,
+      data: {
+        ...data,
+
+        imageUrl,
+      },
     });
   }
 
   async update(
     id: number,
     data: UpdateCarDto,
+    file?: Express.Multer.File,
   ) {
     await this.findOne(id);
+
+    let imageUrl: string | undefined;
+
+    if (file) {
+      const uploaded = await new Promise<any>(
+        (resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream(
+              {
+                folder: 'cars',
+              },
+
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+              },
+            )
+            .end(file.buffer);
+        },
+      );
+
+      imageUrl = uploaded.secure_url;
+    }
 
     return this.prisma.car.update({
       where: {
         id,
       },
 
-      data,
+      data: {
+        ...data,
+
+        ...(imageUrl && {
+          imageUrl,
+        }),
+      },
     });
   }
 

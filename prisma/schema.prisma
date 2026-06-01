@@ -8,65 +8,67 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String
-  email      String    @unique
-  password   String
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
 
-  role       Role      @default(USER)
+  role Role @default(USER)
 
-  rentals    Rental[]
+  rentals Rental[]
 
-  createdAt  DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Car {
-  id           Int         @id @default(autoincrement())
-  name         String
-  plateNumber  String      @unique
-  pricePerDay  Int
+  id          Int    @id @default(autoincrement())
+  name        String
+  plateNumber String @unique
+  pricePerDay Int
 
-  status       CarStatus   @default(AVAILABLE)
+  imageUrl String?
 
-  rentals      Rental[]
+  status CarStatus @default(AVAILABLE)
 
-  createdAt    DateTime    @default(now())
+  rentals Rental[]
+
+  createdAt DateTime @default(now())
 }
 
 model Rental {
-  id           Int            @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  userId       Int
-  carId        Int
+  userId Int
+  carId  Int
 
-  startDate    DateTime
-  endDate      DateTime
+  startDate DateTime
+  endDate   DateTime
 
-  totalPrice   Int
+  totalPrice Int
 
-  status       RentalStatus   @default(PENDING)
+  status RentalStatus @default(PENDING)
 
-  user         User           @relation(fields: [userId], references: [id])
-  car          Car            @relation(fields: [carId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  car  Car  @relation(fields: [carId], references: [id])
 
-  payment      Payment?
+  payment Payment?
 
-  createdAt    DateTime       @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Payment {
-  id           Int             @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  rentalId     Int             @unique
-  rental       Rental          @relation(fields: [rentalId], references: [id])
+  rentalId Int    @unique
+  rental   Rental @relation(fields: [rentalId], references: [id])
 
-  amount       Int
+  amount Int
 
-  proofUrl     String?
+  proofUrl String?
 
-  status       PaymentStatus   @default(PENDING)
+  status PaymentStatus @default(PENDING)
 
-  createdAt    DateTime        @default(now())
+  createdAt DateTime @default(now())
 }
 
 enum Role {

@@ -6,6 +6,8 @@ import {
   Patch,
   Post,
   UseGuards,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +19,8 @@ import { UpdateCarDto } from './dto/update-car.dto';
 
 import { Roles } from '../auth/roles/roles.decorator';
 import { RolesGuard } from '../auth/roles/roles.guard';
+
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('cars')
 export class CarsController {
@@ -39,20 +43,39 @@ export class CarsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
   @Post()
-  create(@Body() body: CreateCarDto) {
-    return this.carsService.create(body);
+  @UseInterceptors(
+    FileInterceptor('file'),
+  )
+  create(
+    @Body() body: CreateCarDto,
+
+    @UploadedFile()
+    file: Express.Multer.File,
+  ) {
+    return this.carsService.create(
+      body,
+      file,
+    );
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
   @Patch(':id')
+  @UseInterceptors(
+    FileInterceptor('file'),
+  )
   update(
     @Param('id') id: string,
+
     @Body() body: UpdateCarDto,
+
+    @UploadedFile()
+    file?: Express.Multer.File,
   ) {
     return this.carsService.update(
       Number(id),
       body,
+      file,
     );
   }
 
