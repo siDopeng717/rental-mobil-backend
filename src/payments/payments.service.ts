@@ -1,15 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-
 import { PrismaService } from '../prisma/prisma.service';
-
-import cloudinary from '../cloudinary/cloudinary';
-
 import type { Multer } from 'multer';
+import cloudinary from '../cloudinary/cloudinary';
 
 @Injectable()
 export class PaymentsService {
   constructor(private prisma: PrismaService) {}
 
+  // USER
   async getHistory(userId: number) {
     return this.prisma.payment.findMany({
       where: {
@@ -25,9 +23,32 @@ export class PaymentsService {
           },
         },
       },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
+  // ADMIN
+  async findAllPayments() {
+    return this.prisma.payment.findMany({
+      include: {
+        rental: {
+          include: {
+            user: true,
+            car: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  // USER
   async uploadProof(id: number, file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('File is required');
@@ -49,6 +70,10 @@ export class PaymentsService {
 
     if (payment.status === 'PAID') {
       throw new BadRequestException('Payment already confirmed');
+    }
+
+    if (payment.status === 'REJECTED') {
+      throw new BadRequestException('Payment has been rejected');
     }
 
     if (payment.proofUrl) {
@@ -94,6 +119,7 @@ export class PaymentsService {
     };
   }
 
+  // ADMIN
   async confirmPayment(id: number) {
     const payment = await this.prisma.payment.findUnique({
       where: {
@@ -101,7 +127,11 @@ export class PaymentsService {
       },
 
       include: {
-        rental: true,
+        rental: {
+          include: {
+            car: true,
+          },
+        },
       },
     });
 
@@ -137,6 +167,16 @@ export class PaymentsService {
       },
     });
 
+    await this.prisma.car.update({
+      where: {
+        id: payment.rental.carId,
+      },
+
+      data: {
+        status: 'RENTED',
+      },
+    });
+
     return {
       message: 'Payment confirmed',
 
@@ -149,9 +189,12 @@ export class PaymentsService {
       paymentStatus: 'PAID',
 
       rentalStatus: 'ACTIVE',
+
+      carStatus: 'RENTED',
     };
   }
 
+  // ADMIN
   async rejectPayment(id: number) {
     const payment = await this.prisma.payment.findUnique({
       where: {
@@ -159,7 +202,11 @@ export class PaymentsService {
       },
 
       include: {
-        rental: true,
+        rental: {
+          include: {
+            car: true,
+          },
+        },
       },
     });
 
@@ -183,6 +230,16 @@ export class PaymentsService {
       },
     });
 
+    await this.prisma.rental.update({
+      where: {
+        id: payment.rentalId,
+      },
+
+      data: {
+        status: 'PENDING',
+      },
+    });
+
     return {
       message: 'Payment rejected',
 
@@ -191,6 +248,8 @@ export class PaymentsService {
       rentalId: payment.rentalId,
 
       paymentStatus: 'REJECTED',
+
+      rentalStatus: 'PENDING',
     };
   }
 }
