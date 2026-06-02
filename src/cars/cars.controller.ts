@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   UseGuards,
   UploadedFile,
   UseInterceptors,
@@ -113,5 +114,13 @@ export class CarsController {
   @Patch(':id/activate')
   activate(@Param('id') id: string) {
     return this.carsService.activate(Number(id));
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.carsService.remove(Number(id));
   }
 }

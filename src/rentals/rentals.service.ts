@@ -192,4 +192,32 @@ export class RentalsService {
       carStatus: 'AVAILABLE',
     };
   }
+
+  async remove(rentalId: number) {
+    const rental = await this.prisma.rental.findUnique({
+      where: {
+        id: rentalId,
+      },
+
+      include: {
+        payment: true,
+      },
+    });
+
+    if (!rental) {
+      throw new BadRequestException('Rental not found');
+    }
+
+    if (rental.payment) {
+      throw new BadRequestException(
+        'Rental cannot be deleted because it already has payment data',
+      );
+    }
+
+    return this.prisma.rental.delete({
+      where: {
+        id: rentalId,
+      },
+    });
+  }
 }

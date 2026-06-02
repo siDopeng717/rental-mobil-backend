@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -141,6 +145,28 @@ export class CarsService {
 
       data: {
         status: 'AVAILABLE',
+      },
+    });
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+
+    const relatedRental = await this.prisma.rental.findFirst({
+      where: {
+        carId: id,
+      },
+    });
+
+    if (relatedRental) {
+      throw new BadRequestException(
+        'Car cannot be deleted because it already has rental history',
+      );
+    }
+
+    return this.prisma.car.delete({
+      where: {
+        id,
       },
     });
   }

@@ -1,4 +1,14 @@
-import { Body, Controller, Post, Request, UseGuards, Get, Patch, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Request,
+  UseGuards,
+  Get,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { RentalsService } from './rentals.service';
 import { CreateRentalDto } from './dto/create-rental.dto';
@@ -46,5 +56,13 @@ export class RentalsController {
   @Get()
   findAllRentals() {
     return this.rentalsService.findAllRentals();
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.rentalsService.remove(Number(id));
   }
 }
