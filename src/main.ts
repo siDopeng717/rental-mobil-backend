@@ -2,10 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
-import {
-  SwaggerModule,
-  DocumentBuilder,
-} from '@nestjs/swagger';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,9 +19,7 @@ async function bootstrap() {
   // Swagger
   const config = new DocumentBuilder()
     .setTitle('Car Rental API')
-    .setDescription(
-      'Documentation for Car Rental Backend API',
-    )
+    .setDescription('Documentation for Car Rental Backend API')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -36,10 +31,7 @@ async function bootstrap() {
     )
     .build();
 
-  const document = SwaggerModule.createDocument(
-    app,
-    config,
-  );
+  const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
@@ -48,12 +40,9 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-
   await app.listen(port);
-
-  console.log(
-    `Server running on http://localhost:${port}`,
-  );
+  console.log(`Server running on http://localhost:${port}`);
+  console.log(`Swagger running on /docs`);
 }
 
 bootstrap();
