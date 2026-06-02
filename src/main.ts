@@ -1,15 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
 
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import {
+  SwaggerModule,
+  DocumentBuilder,
+} from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
 
   app.enableCors();
-  app.setGlobalPrefix('');
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -17,26 +19,40 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger
+  // Swagger Config
   const config = new DocumentBuilder()
     .setTitle('Car Rental API')
-    .setDescription('Documentation for Car Rental Backend API')
+    .setDescription(
+      'Documentation for Car Rental Backend API',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(
+    app,
+    config,
+  );
 
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
+  // Swagger JSON Endpoint
+  app.getHttpAdapter().get(
+    '/swagger.json',
+    (req, res) => {
+      res.json(document);
     },
-  });
+  );
 
   const port = process.env.PORT || 3000;
+
   await app.listen(port);
-  console.log(`Server running on http://localhost:${port}`);
-  console.log(`Swagger running on /docs`);
+
+  console.log(
+    `Server running on http://localhost:${port}`,
+  );
+
+  console.log(
+    `Swagger JSON running on /swagger.json`,
+  );
 }
 
 bootstrap();
