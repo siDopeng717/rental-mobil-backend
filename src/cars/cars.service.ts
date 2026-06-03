@@ -16,13 +16,7 @@ export class CarsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.car.findMany({
-      where: {
-        NOT: {
-          status: 'INACTIVE',
-        },
-      },
-    });
+    return this.prisma.car.findMany();
   }
 
   async findOne(id: number) {
@@ -121,7 +115,7 @@ export class CarsService {
     });
   }
 
-  async deactivate(id: number) {
+  async maintenance(id: number) {
     await this.findOne(id);
 
     return this.prisma.car.update({

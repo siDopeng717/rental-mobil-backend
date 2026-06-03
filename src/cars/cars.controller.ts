@@ -10,13 +10,19 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
+
 import { AuthGuard } from '@nestjs/passport';
+
 import { CarsService } from './cars.service';
+
 import { CreateCarDto } from './dto/create-car.dto';
 import { UpdateCarDto } from './dto/update-car.dto';
+
 import { Roles } from '../auth/roles/roles.decorator';
 import { RolesGuard } from '../auth/roles/roles.guard';
+
 import { FileInterceptor } from '@nestjs/platform-express';
+
 import { ApiTags, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Cars')
@@ -100,12 +106,13 @@ export class CarsController {
   ) {
     return this.carsService.update(Number(id), body, file);
   }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()
-  @Patch(':id/deactivate')
-  deactivate(@Param('id') id: string) {
-    return this.carsService.deactivate(Number(id));
+  @Patch(':id/maintenance')
+  maintenance(@Param('id') id: string) {
+    return this.carsService.maintenance(Number(id));
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
